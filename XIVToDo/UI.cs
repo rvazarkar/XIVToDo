@@ -77,7 +77,7 @@ namespace XIVToDo
 
         private void DrawDailyWindow()
         {
-            ImGui.BeginChild("#ToDoWeeklySection", new Vector2(200, 400), false,
+            ImGui.BeginChild("#ToDoWeeklySection", new Vector2(400, 400), false,
                 ImGuiWindowFlags.AlwaysAutoResize);
             DrawSectionLabel("Beast Tribes");
             DrawBeastTribeToDoItems();

@@ -6,6 +6,7 @@ using System.Text;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
@@ -74,18 +75,24 @@ namespace XIVToDo
             if (row == null)
                 return;
 
+            var avail = ImGui.GetContentRegionAvail().X;
             var currentRep = _getBeastTribeReputation(_playerState, beastTribeID);
             var currentRank = _getBeastTribeRank(_playerState, beastTribeID);
             var maxRep = _beastRep.GetRow((uint) currentRank)?.RequiredReputation;
 
             if (maxRep == null)
                 return;
-
+            
+            ImGui.PushItemWidth(avail * .25f);
             ImGui.Text(row.Name);
             ImGui.SameLine();
+            ImGui.PushItemWidth(avail * .25f);
             ImGui.ProgressBar(currentRep / (float)maxRep);
             ImGui.SameLine();
+            ImGui.PushItemWidth(avail * .25f);
             ImGui.Text($"{currentRep} /  {maxRep}");
+            ImGui.SameLine();
+            ImGui.PushItemWidth(avail * .25f);
             ImGui.ImageButton(TeleportTex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0,
                 Vector4.Zero, Vector4.One);
         }

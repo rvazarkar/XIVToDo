@@ -8,7 +8,7 @@
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="Dalamud, Version=6.0.0.8, Culture=neutral, PublicKeyToken=null">
+        <Reference Include="Dalamud, Version=6.0.0.10, Culture=neutral, PublicKeyToken=null">
             <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
             <Private>false</Private>
         </Reference>
@@ -25,9 +25,6 @@
         <Reference Include="ImGuiScene, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
           <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\ImGuiScene.dll</HintPath>
             <Private>false</Private>
-        </Reference>
-        <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10">
-          <HintPath>..\..\..\AppData\Roaming\XIVLauncher\addon\Hooks\dev\Serilog.dll</HintPath>
         </Reference>
     </ItemGroup>
 </Project>

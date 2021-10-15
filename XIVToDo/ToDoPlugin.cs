@@ -57,6 +57,13 @@ namespace XIVToDo
             var ui = PluginInterface.Create<UI>(config, texStore, beastTribeManager);
             //if (!PluginInterface.Inject(ui,config, texStore)) PluginLog.Error("Could not satisfy requirements for UI");
 
+            unsafe
+            {
+                _updateGoldSaucerHook = new Hook<UpdateGoldSaucerInfoDelegate>(
+                    SigScanner.ScanText("40 55 41 55 41 56 ?? ?? ?? ?? ?? ?? ?? ?? 48 81 ec b0 01 00 00"),
+                    UpdateGoldSaucerDetour);
+            }
+            
             _ui = ui;
 
             CommandManager.AddHandler(Command, new CommandInfo(OnCommand)
@@ -88,7 +95,7 @@ namespace XIVToDo
             _ui.Dispose();
             CommandManager.RemoveHandler(Command);
             PluginInterface.Dispose();
-            _updateGoldSaucerHook.Dispose();
+            _updateGoldSaucerHook?.Dispose();
         }
 
         public string Name => "XIVTODO List";
