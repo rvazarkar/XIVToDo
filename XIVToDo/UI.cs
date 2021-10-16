@@ -100,10 +100,13 @@ namespace XIVToDo
 
         private void DrawBeastTribeToDoItems()
         {
+            ImGui.BeginChild("#beastTribeChild");
+            ImGui.Columns(3, "#beastTribeColumns",false);
             for (var i = 1; i < BeastTribeManager.GetMaxIndex(); i++)
             {
                 BeastTribeManager.DrawBeastTribeItem((ushort) i);
             }
+            ImGui.EndChild();
         }
     }
 }

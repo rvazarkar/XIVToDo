@@ -24,44 +24,34 @@ namespace XIVToDo
 
         private unsafe delegate int ExecuteGetBeastTribeRankDelegate(PlayerState* playerState, ushort beastTribeIndex);
         private unsafe delegate int ExecuteGetBeastTribeReputationDelegate(PlayerState* playerState, ushort beastTribeIndex);
+        private unsafe delegate int ExecuteGetBeastTribeCurrentRepDelegate(PlayerState* playerState, ushort beastTribeIndex);
         private static ExecuteGetBeastTribeRankDelegate _getBeastTribeRank;
-        private static ExecuteGetBeastTribeReputationDelegate _getBeastTribeReputation;
+        private static ExecuteGetBeastTribeReputationDelegate _getBeastTribeNeededReputation;
+        private static ExecuteGetBeastTribeCurrentRepDelegate _getBeastTribeCurrentReputation;
 
         private readonly ExcelSheet<BeastTribe> _beastTribes;
-        private readonly ExcelSheet<BeastReputationRank> _beastRep;
         private readonly unsafe PlayerState* _playerState;
         private readonly int _maxIndex;
-        private ConcurrentDictionary<ushort, int> _repCache = new();
-        private ConcurrentDictionary<ushort, int> _repRankCache = new();
 
         public BeastTribeManager()
         {
             _getBeastTribeRank =
                 Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeRankDelegate>(
                     SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B6 C8 FF C9"));
-            _getBeastTribeReputation =
+            _getBeastTribeNeededReputation =
                 Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeReputationDelegate>(
                     SigScanner.ScanText("E8 ?? ?? ?? ?? 66 3B D8 41 0F 43 FE"));
+            _getBeastTribeCurrentReputation =
+                Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeCurrentRepDelegate>(
+                    SigScanner.ScanText("e8 ?? ?? ?? ?? 0f b7 c0 8d 57 74"));
             
             _beastTribes = DataManager.GameData.GetExcelSheet<BeastTribe>();
-            _beastRep = DataManager.GameData.GetExcelSheet<BeastReputationRank>();
             unsafe
             {
                 _playerState = &UIState.Instance()->PlayerState;    
             }
             
             _maxIndex = (int)_beastTribes.Max(x => x.RowId);
-            unsafe
-            {
-                for (ushort i = 1; i < _maxIndex; i++)
-                {
-                    var currentRep = _getBeastTribeReputation(_playerState, i);
-                    var currentRank = _getBeastTribeRank(_playerState, i);
-                    _repCache[i] = currentRep;
-                    _repRankCache[i] = currentRank;
-                }    
-            }
-            
         }
 
         public int GetMaxIndex()
@@ -75,26 +65,25 @@ namespace XIVToDo
             if (row == null)
                 return;
 
-            var avail = ImGui.GetContentRegionAvail().X;
-            var currentRep = _getBeastTribeReputation(_playerState, beastTribeID);
-            var currentRank = _getBeastTribeRank(_playerState, beastTribeID);
-            var maxRep = _beastRep.GetRow((uint) currentRank)?.RequiredReputation;
+            var currentRep = _getBeastTribeCurrentReputation(_playerState, beastTribeID);
+            var maxRep = _getBeastTribeNeededReputation(_playerState, beastTribeID);
 
-            if (maxRep == null)
+            if (maxRep == 0)
                 return;
-            
-            ImGui.PushItemWidth(avail * .25f);
-            ImGui.Text(row.Name);
+
+            ImGui.SetColumnWidth(0, 90);
+            ImGui.SetColumnWidth(1, 250);
+            ImGui.SetColumnWidth(2, 30);
+            ImGui.Separator();
+            ImGui.Text(row.Name.ToString().FirstCharToUpper());
+            ImGui.NextColumn();
+            ImGui.ProgressBar(currentRep / (float)maxRep, new Vector2(175, 20));
             ImGui.SameLine();
-            ImGui.PushItemWidth(avail * .25f);
-            ImGui.ProgressBar(currentRep / (float)maxRep);
-            ImGui.SameLine();
-            ImGui.PushItemWidth(avail * .25f);
             ImGui.Text($"{currentRep} /  {maxRep}");
-            ImGui.SameLine();
-            ImGui.PushItemWidth(avail * .25f);
+            ImGui.NextColumn();
             ImGui.ImageButton(TeleportTex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0,
                 Vector4.Zero, Vector4.One);
+            ImGui.NextColumn();
         }
     }
 }

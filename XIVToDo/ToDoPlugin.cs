@@ -62,6 +62,7 @@ namespace XIVToDo
                 _updateGoldSaucerHook = new Hook<UpdateGoldSaucerInfoDelegate>(
                     SigScanner.ScanText("40 55 41 55 41 56 ?? ?? ?? ?? ?? ?? ?? ?? 48 81 ec b0 01 00 00"),
                     UpdateGoldSaucerDetour);
+                _updateGoldSaucerHook.Enable();
             }
             
             _ui = ui;
@@ -86,7 +87,9 @@ namespace XIVToDo
             PluginLog.LogInformation("Hooked function called");
             var ticketsPurchased = Marshal.ReadInt16(data + 0x2e);
             var ticketsAllowed = Marshal.ReadInt16(data + 0x30);
+            var test = Marshal.ReadInt16(data + 0x10);
             PluginLog.LogInformation($"TicketsA: {ticketsPurchased} / {ticketsAllowed}");
+            PluginLog.LogInformation("Test: {val}", test);
             _updateGoldSaucerHook.Original(agentInterface, data);
         }
 
