@@ -4,6 +4,7 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
 using ImGuiNET;
+using XIVToDo.Managers;
 
 namespace XIVToDo
 {

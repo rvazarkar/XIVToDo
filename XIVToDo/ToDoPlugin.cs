@@ -1,21 +1,11 @@
-﻿using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Reflection;
 using Dalamud.Data;
-using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
-using Dalamud.Hooking;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using FFXIVClientStructs;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using Lumina.Excel.GeneratedSheets;
+using XIVToDo.Managers;
 using SigScanner = Dalamud.Game.SigScanner;
 
 namespace XIVToDo

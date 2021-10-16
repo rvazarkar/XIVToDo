@@ -1,21 +1,18 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
-using ImGuiScene;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace XIVToDo
+namespace XIVToDo.Managers
 {
     public class BeastTribeManager
     {
@@ -25,8 +22,13 @@ namespace XIVToDo
         [PluginService] private TeleportManager TeleportManager { get; set; }
         private unsafe delegate int ExecuteGetBeastTribeReputationDelegate(PlayerState* playerState, ushort beastTribeIndex);
         private unsafe delegate int ExecuteGetBeastTribeCurrentRepDelegate(PlayerState* playerState, ushort beastTribeIndex);
+        private unsafe delegate int ExecuteGetBeastTribeAllowances(void* globalBeastTribeThingy);
+
+        private unsafe void* _globalBeastTribeThing;
+        
         private static ExecuteGetBeastTribeReputationDelegate _getBeastTribeNeededReputation;
         private static ExecuteGetBeastTribeCurrentRepDelegate _getBeastTribeCurrentReputation;
+        private static ExecuteGetBeastTribeAllowances _executeGetBeastTribeAllowances;
 
         private readonly ExcelSheet<BeastTribe> _beastTribes;
         private readonly unsafe PlayerState* _playerState;
@@ -59,10 +61,14 @@ namespace XIVToDo
                 Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeCurrentRepDelegate>(
                     SigScanner.ScanText("e8 ?? ?? ?? ?? 0f b7 c0 8d 57 74"));
             
+            _executeGetBeastTribeAllowances =
+                Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeAllowances>(
+                    SigScanner.ScanText("E8 ?? ?? ?? ?? 49 8B 8F ?? ?? ?? ?? 44 8B E0"));
             _beastTribes = DataManager.GameData.GetExcelSheet<BeastTribe>();
             unsafe
             {
-                _playerState = &UIState.Instance()->PlayerState;    
+                _playerState = &UIState.Instance()->PlayerState;
+                _globalBeastTribeThing = (void*)SigScanner.GetStaticAddressFromSig("48 8d 0d ?? ?? ?? ?? e8 c9 d3 38 00");
             }
             
             _maxIndex = (int)_beastTribes.Max(x => x.RowId);
@@ -76,7 +82,11 @@ namespace XIVToDo
         public void DrawBeastTribeItems()
         {
             ImGui.BeginChild("#beastTribeChild");
-            ImGui.Text("Beast Tribes");
+            unsafe
+            {
+                ImGui.Text($"Beast Tribes ({_executeGetBeastTribeAllowances(_globalBeastTribeThing)} Allowances)");    
+            }
+            
             ImGui.Separator();
             ImGui.Columns(3, "#beastTribeColumns",false);
             ImGui.SetColumnWidth(0, 90);

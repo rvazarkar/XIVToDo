@@ -6,7 +6,7 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
-namespace XIVToDo
+namespace XIVToDo.Managers
 {
     public class GoldSaucerManager : IDisposable
     {
@@ -40,8 +40,18 @@ namespace XIVToDo
             PluginLog.LogInformation("Hooked function called");
             _miniCactbotTicketsPurchased= Marshal.ReadInt16(data + 0x2e);
             _miniCactbotTicketsAllowed = Marshal.ReadInt16(data + 0x30);
-            var test = Marshal.ReadInt16(data + 0x10);
-            PluginLog.LogInformation("Test: {val}", test);
+            var jumboPurchased = 0;
+            //TODO: Test this logic
+            const int offset = 0x28;
+            for (var i = 0; i < 3; i++)
+            {
+                var num = Marshal.ReadInt16(data + offset + (i * 2));
+                if (num is > 0 and < 10000)
+                {
+                    jumboPurchased++;
+                }
+            }
+            PluginLog.LogInformation("Jumbo Tickets Purchased: {num}", jumboPurchased);
             _updateGoldSaucerHook.Original(agentInterface, data);
         }
 
