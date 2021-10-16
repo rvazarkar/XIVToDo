@@ -108,13 +108,14 @@ namespace XIVToDo
             ImGui.SameLine();
             ImGui.Text($"{currentRep} /  {maxRep}");
             ImGui.NextColumn();
+            ImGui.PushID($"#beastTribeTeleport{beastTribeID}");
             if (ImGui.ImageButton(TeleportTex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0,
                 Vector4.Zero, Vector4.One))
             {
                 PluginLog.LogInformation("Trying teleport to {location}", _aetheryteMap[beastTribeID]);
                 TeleportManager.Teleport(_aetheryteMap[beastTribeID]);
             }
-            
+            ImGui.PopID();
             ImGui.NextColumn();
         }
     }
