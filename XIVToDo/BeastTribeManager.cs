@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -21,11 +22,9 @@ namespace XIVToDo
         [PluginService] private SigScanner SigScanner { get; set; }
         [PluginService] private DataManager DataManager { get; set; }
         [PluginService] private D3DTextureWrap TeleportTex { get; set; }
-
-        private unsafe delegate int ExecuteGetBeastTribeRankDelegate(PlayerState* playerState, ushort beastTribeIndex);
+        [PluginService] private TeleportManager TeleportManager { get; set; }
         private unsafe delegate int ExecuteGetBeastTribeReputationDelegate(PlayerState* playerState, ushort beastTribeIndex);
         private unsafe delegate int ExecuteGetBeastTribeCurrentRepDelegate(PlayerState* playerState, ushort beastTribeIndex);
-        private static ExecuteGetBeastTribeRankDelegate _getBeastTribeRank;
         private static ExecuteGetBeastTribeReputationDelegate _getBeastTribeNeededReputation;
         private static ExecuteGetBeastTribeCurrentRepDelegate _getBeastTribeCurrentReputation;
 
@@ -33,11 +32,26 @@ namespace XIVToDo
         private readonly unsafe PlayerState* _playerState;
         private readonly int _maxIndex;
 
+        private readonly Dictionary<uint, uint> _aetheryteMap = new()
+        {
+            {1, 19},
+            {2, 4},
+            {3, 16},
+            {4, 14},
+            {5, 7},
+            {6, 73},
+            {7, 76},
+            {8, 78},
+            {9, 105},
+            {10, 99},
+            {11, 128},
+            {12, 144},
+            {13, 143},
+            {14, 139}
+        };
+
         public BeastTribeManager()
         {
-            _getBeastTribeRank =
-                Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeRankDelegate>(
-                    SigScanner.ScanText("E8 ?? ?? ?? ?? 0F B6 C8 FF C9"));
             _getBeastTribeNeededReputation =
                 Marshal.GetDelegateForFunctionPointer<ExecuteGetBeastTribeReputationDelegate>(
                     SigScanner.ScanText("E8 ?? ?? ?? ?? 66 3B D8 41 0F 43 FE"));
@@ -54,12 +68,29 @@ namespace XIVToDo
             _maxIndex = (int)_beastTribes.Max(x => x.RowId);
         }
 
-        public int GetMaxIndex()
+        private int GetMaxIndex()
         {
             return _maxIndex;
         }
+        
+        public void DrawBeastTribeItems()
+        {
+            ImGui.BeginChild("#beastTribeChild");
+            ImGui.Text("Beast Tribes");
+            ImGui.Separator();
+            ImGui.Columns(3, "#beastTribeColumns",false);
+            ImGui.SetColumnWidth(0, 90);
+            ImGui.SetColumnWidth(1, 250);
+            ImGui.SetColumnWidth(2, 30);
+            
+            for (var i = 1; i < GetMaxIndex(); i++)
+            {
+                DrawBeastTribeItem((ushort) i);
+            }
+            ImGui.EndChild();
+        }
 
-        public unsafe void DrawBeastTribeItem(ushort beastTribeID)
+        private unsafe void DrawBeastTribeItem(ushort beastTribeID)
         {
             var row = _beastTribes?.DefaultIfEmpty(null).FirstOrDefault(x => x.RowId == beastTribeID);
             if (row == null)
@@ -70,19 +101,20 @@ namespace XIVToDo
 
             if (maxRep == 0)
                 return;
-
-            ImGui.SetColumnWidth(0, 90);
-            ImGui.SetColumnWidth(1, 250);
-            ImGui.SetColumnWidth(2, 30);
-            ImGui.Separator();
+            
             ImGui.Text(row.Name.ToString().FirstCharToUpper());
             ImGui.NextColumn();
             ImGui.ProgressBar(currentRep / (float)maxRep, new Vector2(175, 20));
             ImGui.SameLine();
             ImGui.Text($"{currentRep} /  {maxRep}");
             ImGui.NextColumn();
-            ImGui.ImageButton(TeleportTex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0,
-                Vector4.Zero, Vector4.One);
+            if (ImGui.ImageButton(TeleportTex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0,
+                Vector4.Zero, Vector4.One))
+            {
+                PluginLog.LogInformation("Trying teleport to {location}", _aetheryteMap[beastTribeID]);
+                TeleportManager.Teleport(_aetheryteMap[beastTribeID]);
+            }
+            
             ImGui.NextColumn();
         }
     }

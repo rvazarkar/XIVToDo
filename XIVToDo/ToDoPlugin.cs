@@ -26,46 +26,22 @@ namespace XIVToDo
 
         private readonly UI _ui;
         [PluginService] private DataManager DataManager { get; set; }
-
         [PluginService] private GameGui GameGui { get; set; }
         [PluginService] private SigScanner SigScanner { get; set; }
-        private unsafe PlayerState* _playerState;
 
-        private static ExecuteGetBeastTribeRankDelegate _getBeastTribeRank;
-        private static ExecuteGetBeastTribeReputationDelegate _getBeastTribeReputation;
-        private static Hook<UpdateGoldSaucerInfoDelegate> _updateGoldSaucerHook;
-
-        private unsafe delegate int ExecuteGetBeastTribeRankDelegate(PlayerState* playerState, ushort beastTribeIndex);
-
-        private unsafe delegate int ExecuteGetBeastTribeReputationDelegate(PlayerState* playerState, ushort beastTribeIndex);
-
-        private unsafe delegate void UpdateGoldSaucerInfoDelegate(AgentInterface* agentInterface, IntPtr param2);
-        
+        private readonly GoldSaucerManager _goldSaucerManager;
+        private readonly TeleportManager _teleportManager;
 
         public ToDoPlugin()
         {
             Resolver.Initialize();
             var config = PluginInterface.Create<Configuration>();
-            //if (!PluginInterface.Inject(config)) PluginLog.Error("Could not satisfy requirements for Configuration");
             var texStore = PluginInterface.Create<TextureStore>();
             var teleportTexture = texStore.GetTexture(111);
-            PluginLog.LogInformation($"{teleportTexture == null}");
-            //if (!PluginInterface.Inject(texStore)) PluginLog.Error("Could not satisfy requirements for TextureStore");
-            var beastTribeManager = PluginInterface.Create<BeastTribeManager>(teleportTexture);
-            if (!PluginInterface.Inject(beastTribeManager)) PluginLog.Error("Could not satisfy requirements for BeastTribeManager");
-            //if (!PluginInterface.Inject(beastTribeManager)) PluginLog.Error("Could not satisfy requirements for BeastTribeManager");
-            var ui = PluginInterface.Create<UI>(config, texStore, beastTribeManager);
-            //if (!PluginInterface.Inject(ui,config, texStore)) PluginLog.Error("Could not satisfy requirements for UI");
-
-            unsafe
-            {
-                _updateGoldSaucerHook = new Hook<UpdateGoldSaucerInfoDelegate>(
-                    SigScanner.ScanText("40 55 41 55 41 56 ?? ?? ?? ?? ?? ?? ?? ?? 48 81 ec b0 01 00 00"),
-                    UpdateGoldSaucerDetour);
-                _updateGoldSaucerHook.Enable();
-            }
-            
-            _ui = ui;
+            _teleportManager = PluginInterface.Create<TeleportManager>();
+            var beastTribeManager = PluginInterface.Create<BeastTribeManager>(teleportTexture, _teleportManager);
+            _goldSaucerManager = PluginInterface.Create<GoldSaucerManager>(teleportTexture);
+            _ui = PluginInterface.Create<UI>(config, texStore, beastTribeManager);
 
             CommandManager.AddHandler(Command, new CommandInfo(OnCommand)
             {
@@ -82,23 +58,12 @@ namespace XIVToDo
 
         public string AssemblyLocation { get; set; } = Assembly.GetExecutingAssembly().Location;
 
-        public static unsafe void UpdateGoldSaucerDetour(AgentInterface* agentInterface, IntPtr data)
-        {
-            PluginLog.LogInformation("Hooked function called");
-            var ticketsPurchased = Marshal.ReadInt16(data + 0x2e);
-            var ticketsAllowed = Marshal.ReadInt16(data + 0x30);
-            var test = Marshal.ReadInt16(data + 0x10);
-            PluginLog.LogInformation($"TicketsA: {ticketsPurchased} / {ticketsAllowed}");
-            PluginLog.LogInformation("Test: {val}", test);
-            _updateGoldSaucerHook.Original(agentInterface, data);
-        }
-
         public void Dispose()
         {
             _ui.Dispose();
+            _goldSaucerManager?.Dispose();
             CommandManager.RemoveHandler(Command);
             PluginInterface.Dispose();
-            _updateGoldSaucerHook?.Dispose();
         }
 
         public string Name => "XIVTODO List";

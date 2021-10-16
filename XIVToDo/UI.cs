@@ -79,8 +79,7 @@ namespace XIVToDo
         {
             ImGui.BeginChild("#ToDoWeeklySection", new Vector2(400, 400), false,
                 ImGuiWindowFlags.AlwaysAutoResize);
-            DrawSectionLabel("Beast Tribes");
-            DrawBeastTribeToDoItems();
+            BeastTribeManager.DrawBeastTribeItems();
             ImGui.EndChild();
         }
 
@@ -96,17 +95,6 @@ namespace XIVToDo
             var tex = TextureStore.GetTexture(111);
             ImGui.SameLine();
             ImGui.ImageButton(tex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0, Vector4.Zero, Vector4.One);
-        }
-
-        private void DrawBeastTribeToDoItems()
-        {
-            ImGui.BeginChild("#beastTribeChild");
-            ImGui.Columns(3, "#beastTribeColumns",false);
-            for (var i = 1; i < BeastTribeManager.GetMaxIndex(); i++)
-            {
-                BeastTribeManager.DrawBeastTribeItem((ushort) i);
-            }
-            ImGui.EndChild();
         }
     }
 }
