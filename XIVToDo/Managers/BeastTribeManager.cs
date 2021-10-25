@@ -79,25 +79,25 @@ namespace XIVToDo.Managers
             return _maxIndex;
         }
         
-        public void DrawBeastTribeItems()
+        public unsafe void DrawBeastTribeItems()
         {
-            ImGui.BeginChild("#beastTribeChild");
-            unsafe
+            var header = $"Beast Tribes ({_executeGetBeastTribeAllowances(_globalBeastTribeThing)} Allowances)";
+            
+            if (ImGui.CollapsingHeader(header, ImGuiTreeNodeFlags.DefaultOpen))
             {
-                ImGui.Text($"Beast Tribes ({_executeGetBeastTribeAllowances(_globalBeastTribeThing)} Allowances)");    
+                ImGui.BeginChild(ToDoPlugin.GetID("beastTribeChild"));
+                ImGui.Columns(3, ToDoPlugin.GetID("beastTribeColumns"),false);
+                ImGui.SetColumnWidth(0, 90);
+                ImGui.SetColumnWidth(1, 250);
+                ImGui.SetColumnWidth(2, 30);
+            
+                for (var i = 1; i < GetMaxIndex(); i++)
+                {
+                    DrawBeastTribeItem((ushort) i);
+                }
+                ImGui.EndChild();
             }
             
-            ImGui.Separator();
-            ImGui.Columns(3, "#beastTribeColumns",false);
-            ImGui.SetColumnWidth(0, 90);
-            ImGui.SetColumnWidth(1, 250);
-            ImGui.SetColumnWidth(2, 30);
-            
-            for (var i = 1; i < GetMaxIndex(); i++)
-            {
-                DrawBeastTribeItem((ushort) i);
-            }
-            ImGui.EndChild();
         }
 
         private unsafe void DrawBeastTribeItem(ushort beastTribeID)
@@ -106,11 +106,12 @@ namespace XIVToDo.Managers
             if (row == null)
                 return;
 
-            var currentRep = _getBeastTribeCurrentReputation(_playerState, beastTribeID);
             var maxRep = _getBeastTribeNeededReputation(_playerState, beastTribeID);
 
             if (maxRep == 0)
                 return;
+            
+            var currentRep = _getBeastTribeCurrentReputation(_playerState, beastTribeID);
             
             ImGui.Text(row.Name.ToString().FirstCharToUpper());
             ImGui.NextColumn();
@@ -118,7 +119,7 @@ namespace XIVToDo.Managers
             ImGui.SameLine();
             ImGui.Text($"{currentRep} /  {maxRep}");
             ImGui.NextColumn();
-            ImGui.PushID($"#beastTribeTeleport{beastTribeID}");
+            ImGui.PushID(ToDoPlugin.GetID($"#beastTribeTeleport{beastTribeID}"));
             if (ImGui.ImageButton(TeleportTex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0,
                 Vector4.Zero, Vector4.One))
             {

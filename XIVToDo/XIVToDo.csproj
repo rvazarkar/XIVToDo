@@ -8,7 +8,7 @@
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="Dalamud, Version=6.0.0.10, Culture=neutral, PublicKeyToken=null">
+        <Reference Include="Dalamud, Version=6.0.0.14, Culture=neutral, PublicKeyToken=null">
             <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
             <Private>false</Private>
         </Reference>

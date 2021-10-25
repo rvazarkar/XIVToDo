@@ -30,8 +30,8 @@ namespace XIVToDo
             var teleportTexture = texStore.GetTexture(111);
             _teleportManager = PluginInterface.Create<TeleportManager>();
             var beastTribeManager = PluginInterface.Create<BeastTribeManager>(teleportTexture, _teleportManager);
-            _goldSaucerManager = PluginInterface.Create<GoldSaucerManager>(teleportTexture);
-            _ui = PluginInterface.Create<UI>(config, texStore, beastTribeManager);
+            _goldSaucerManager = PluginInterface.Create<GoldSaucerManager>(teleportTexture, _teleportManager);
+            _ui = PluginInterface.Create<UI>(config, texStore, beastTribeManager, _goldSaucerManager);
 
             CommandManager.AddHandler(Command, new CommandInfo(OnCommand)
             {
@@ -50,10 +50,10 @@ namespace XIVToDo
 
         public void Dispose()
         {
-            _ui.Dispose();
+            _ui?.Dispose();
             _goldSaucerManager?.Dispose();
             CommandManager.RemoveHandler(Command);
-            PluginInterface.Dispose();
+            PluginInterface?.Dispose();
         }
 
         public string Name => "XIVTODO List";
@@ -66,6 +66,11 @@ namespace XIVToDo
         private void OnCommand(string command, string args)
         {
             _ui.Visible = !_ui.Visible;
+        }
+
+        internal static string GetID(string spec)
+        {
+            return $"#xivToDo{spec}";
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Numerics;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using ImGuiNET;
 using XIVToDo.Managers;
 
@@ -20,6 +21,7 @@ namespace XIVToDo
         [PluginService] private TextureStore TextureStore { get; set; }
         [PluginService] private ClientState ClientState { get; set; }
         [PluginService] private BeastTribeManager BeastTribeManager { get; set; }
+        [PluginService] private GoldSaucerManager GoldSaucerManager { get; set; }
 
         public bool Visible
         {
@@ -47,7 +49,8 @@ namespace XIVToDo
             {
                 if (ImGui.BeginTabBar("XIVTodoTabBar", ImGuiTabBarFlags.NoTooltip))
                 {
-                    if (ImGui.BeginTabItem("Daily"))
+                    var dailyString = $"Daily ({GetTimeUntilDailyReset().ToString(@"hh\:mm\:ss")}###dailyID)";
+                    if (ImGui.BeginTabItem(dailyString))
                     {
                         _selectedTab = 0;
                         ImGui.EndTabItem();
@@ -81,6 +84,7 @@ namespace XIVToDo
             ImGui.BeginChild("#ToDoWeeklySection", new Vector2(400, 400), false,
                 ImGuiWindowFlags.AlwaysAutoResize);
             BeastTribeManager.DrawBeastTribeItems();
+            GoldSaucerManager.DrawGoldSaucerDailyItems();
             ImGui.EndChild();
         }
 
@@ -96,6 +100,14 @@ namespace XIVToDo
             var tex = TextureStore.GetTexture(111);
             ImGui.SameLine();
             ImGui.ImageButton(tex.ImGuiHandle, new Vector2(20, 25), Vector2.Zero, Vector2.One, 0, Vector4.Zero, Vector4.One);
+        }
+
+        private static TimeSpan GetTimeUntilDailyReset()
+        {
+            var currentTime = DateTime.UtcNow;
+            var targetTime = currentTime.Hour < 3 ? new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 3, 0, 0) : new DateTime(currentTime.Year, currentTime.Month, currentTime.Day + 1, 3, 0, 0);
+            var offset =targetTime.Subtract(currentTime);
+            return offset;
         }
     }
 }
